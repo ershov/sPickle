@@ -8,7 +8,7 @@ import dataclasses, enum
 
 import io
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 class PickleError(Exception): pass
 class PicklingError(PickleError): pass
@@ -51,22 +51,18 @@ def encode_len(x, strm):
     assert x >= 0
 
     while x > 0x7F:
-        strm.write(pack("B", x & 127))
-        # strm.write(chr(x & 127))
+        strm.write(pack("B", (x & 127) | 0x80))
         x >>= 7
-    strm.write(pack("B", x | 0x80))
-    # strm.write(chr(x | 0x80))
+    strm.write(pack("B", x))
 
 def encode_len_s(x):
     assert x >= 0
 
     ret = []
     while x > 0x7F:
-        ret.append(pack("B", x & 127))
-        # ret += chr(x & 127)
+        ret.append(pack("B", (x & 127) | 0x80))
         x >>= 7
-    ret.append(pack("B", x | 0x80))
-    # ret += chr(x | 0x80)
+    ret.append(pack("B", x))
     return b"".join(ret)
 
 # Encode small number
@@ -93,11 +89,11 @@ def decode_len(strm):
     ret = 0
     shift = 0
     x = ord(strm.read(1))
-    while (x & 0x80) == 0:
-        ret |= (x << shift)
+    while (x & 0x80) != 0:
+        ret |= ((x & 0x7F) << shift)
         x = ord(strm.read(1))
         shift += 7
-    ret |= (x & 0x7F) << shift
+    ret |= x << shift
     return ret
 
 # Decode small number
@@ -270,8 +266,8 @@ def __load1(strm, memo):
 
 # Public API
 
-def dump(obj, file, protocol=0):
-    if protocol != 0:
+def dump(obj, file, protocol=1):
+    if protocol != 1:
         raise PicklingError("Unsupported protocol version")
     file.write(MAGIC)
     encode_len(protocol, file)
@@ -290,7 +286,7 @@ def load(file):
     if file.read(len(MAGIC)) != MAGIC:
         raise UnpicklingError("Invalid pickle file")
     protocol = decode_len(file)
-    if protocol != 0:
+    if protocol != 1:
         raise UnpicklingError("Unsupported protocol version")
 
     memo = []

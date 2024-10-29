@@ -27,6 +27,7 @@ def test():
     pprint(a)
     print(len(pickle1))
     pprint(restore1)
+    # pprint(pickle1)
     print(len(pickle2))
     pprint(pickle2)
     pprint(restore2)

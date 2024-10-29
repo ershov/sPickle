@@ -9,3 +9,14 @@ This module is compatible standard pickle module. You can use `restrictedpickle`
 ```bash
 pip install restrictedpickle
 ```
+
+## Usage
+
+```python
+import restrictedpickle.classic as pickle
+
+data = {'a': 1, 'b': 2}
+data_serialized = pickle.dumps(data)
+data_unserialized = pickle.loads(data_serialized)
+assert data == data_unserialized
+```
